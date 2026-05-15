@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ML Dashboard — Deploy</title>
+<link rel="stylesheet" href="/static/css/style.css"/>
+<link rel="stylesheet" href="/static/css/deploy.css"/>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<div class="topnav">
+  <span style="font-weight:700;font-size:16px;color:#1c8fa8;margin-left:auto;margin-right:auto">
+    🚀 Deploy & Test Model
+  </span>
+</div>
+
+<div class="deploy-container">
+
+  <!-- Step 1: Select Model -->
+  <div class="deploy-card">
+    <div class="deploy-card-title">
+      <span class="step-num">1</span>
+      Select Saved Model
+    </div>
+    <select id="deployModelSelect" class="deploy-model-select"
+            onchange="onModelSelect(this.value)">
+      <option value="">-- Select a trained model --</option>
+    </select>
+    <div id="modelInfo" style="display:none;margin-top:14px">
+      <div class="model-info">
+        <div id="modelInfoName" style="font-size:14px;font-weight:700;color:#1c8fa8;margin-bottom:10px"></div>
+        <div class="model-info-grid" id="modelInfoGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Input Features -->
+  <div class="deploy-card" id="inputCard" style="display:none">
+    <div class="deploy-card-title">
+      <span class="step-num">2</span>
+      Enter Feature Values
+      <span id="featCountBadge" style="font-size:11px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:20px;padding:3px 10px;font-weight:600;margin-left:auto"></span>
+    </div>
+    <div id="featureInputs" class="feature-inputs-grid"></div>
+    <button class="btn-predict" onclick="runPredict()">🔮 Run Prediction</button>
+  </div>
+
+  <!-- Step 3: Result -->
+  <div class="deploy-card" id="resultCard" style="display:none">
+    <div class="deploy-card-title">
+      <span class="step-num">3</span>
+      Prediction Result
+    </div>
+    <div id="predResult" class="pred-result"></div>
+  </div>
+
+  <!-- No Models Yet -->
+  <div id="noModelCard" class="deploy-card" style="display:none">
+    <div class="no-model-box">
+      <div class="no-model-icon">🤖</div>
+      <div class="no-model-text">No trained models found</div>
+      <div class="no-model-sub">Train a model in the Dashboard, then click "Save Model"</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="/static/js/deploy.js"></script>
+</body>
+</html>

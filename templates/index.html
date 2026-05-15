@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ML Dashboard — Spark</title>
+<link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<div class="topnav">
+  <button class="btn-upload active-nav" id="btnUpload" onclick="showSection('upload')">Upload data</button>
+  <button class="btn-nav" id="btnDataInfo" onclick="navClick('datainfo')" disabled>Data Info</button>
+  <button class="btn-nav" id="btnProcessing" onclick="navClick('processing')" disabled>Processing</button>
+  <button class="btn-nav" id="btnViz" onclick="navClick('visualization')" disabled>Visualization</button>
+  <button class="btn-nav btn-ml-locked" id="btnML" onclick="navClick('ml')" disabled>
+    🔒 ML Models
+  </button>
+  <a href="/deploy" class="btn-deploy" id="btnDeploy" style="display:none" target="_blank">🚀 Deploy</a>
+</div>
+
+<!-- Upload Section -->
+<div id="sec-upload" class="section active">
+  <div class="upload-hero">
+    <div class="upload-card">
+      <div class="hero-img-wrap">
+        <img id="heroStaticImg" src="" alt="" style="display:none; width:100%; border-radius:12px; max-height:240px; object-fit:cover;"/>
+        <svg id="heroSvg" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg" class="hero-svg">
+          <rect width="500" height="240" rx="16" fill="#f0f4ff"/>
+          <circle cx="370" cy="70" r="60" fill="#ffd166" opacity=".9"/>
+          <ellipse cx="130" cy="170" rx="80" ry="55" fill="#a8d8ea" opacity=".45"/>
+          <ellipse cx="368" cy="72" rx="42" ry="30" fill="#ffc107"/>
+          <circle cx="338" cy="78" r="24" fill="#ffc107"/>
+          <circle cx="398" cy="78" r="20" fill="#ffc107"/>
+          <rect x="338" y="78" width="78" height="32" fill="#ffc107"/>
+          <polygon points="370,38 385,62 355,62" fill="white"/>
+          <rect x="364" y="59" width="10" height="24" fill="white"/>
+          <rect x="120" y="110" width="145" height="98" rx="7" fill="#2563eb"/>
+          <rect x="127" y="117" width="131" height="82" rx="5" fill="#1e3a5f"/>
+          <polygon points="143,197 178,148 213,197" fill="#10b981"/>
+          <polygon points="183,197 218,142 253,197" fill="#059669"/>
+          <circle cx="238" cy="145" r="13" fill="#fbbf24"/>
+          <rect x="165" y="208" width="62" height="7" rx="3" fill="#94a3b8"/>
+          <rect x="180" y="215" width="9" height="20" rx="2" fill="#94a3b8"/>
+          <rect x="203" y="215" width="9" height="20" rx="2" fill="#94a3b8"/>
+          <circle cx="88" cy="170" r="20" fill="#f59e0b"/>
+          <ellipse cx="88" cy="208" rx="24" ry="30" fill="#ef4444"/>
+          <rect x="64" y="210" width="48" height="30" rx="4" fill="#1e293b"/>
+          <rect x="66" y="212" width="44" height="26" rx="3" fill="#3b82f6"/>
+          <rect x="410" y="130" width="60" height="7" rx="2" fill="#334155"/>
+          <rect x="410" y="142" width="60" height="7" rx="2" fill="#475569"/>
+          <rect x="410" y="154" width="60" height="7" rx="2" fill="#334155"/>
+          <rect x="410" y="166" width="60" height="7" rx="2" fill="#475569"/>
+          <rect x="410" y="178" width="60" height="7" rx="2" fill="#334155"/>
+        </svg>
+      </div>
+
+      <div class="upload-drop-area" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="12" fill="#e0f2fe"/>
+          <path d="M24 14L24 34M24 14L18 20M24 14L30 20" stroke="#0284c7"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 36H34" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <p class="upload-main-text">Click to upload or Drag & Drop</p>
+        <p class="upload-sub-text">CSV or Excel (.csv / .xlsx / .xls) — Spark powered ⚡</p>
+        <input type="file" id="fileInput" accept=".csv,.xls,.xlsx" hidden onchange="uploadFile(this)"/>
+      </div>
+      <div id="uploadStatus" class="upload-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Data Info Section -->
+<div id="sec-datainfo" class="section">
+  <div class="layout-side">
+    <div class="sidebar">
+      <div class="sidebar-title">Data Info</div>
+      <button class="btn-side" onclick="dataInfoAction('head',this)">View Head Data</button>
+      <button class="btn-side" onclick="dataInfoAction('columns_info',this)">Columns Info</button>
+      <button class="btn-side" onclick="dataInfoAction('describe',this)">Data Describe</button>
+      <button class="btn-side" onclick="dataInfoAction('missing',this)">Missing Col</button>
+      <button class="btn-side" onclick="dataInfoAction('duplicates',this)">Check Duplicate</button>
+      <button class="btn-side" onclick="openColModal('value_counts')">Count Val Col (Top 10)</button>
+    </div>
+    <div class="main-content">
+      <div class="toggle-bar">
+        <button class="toggle-btn active-toggle" id="di-tog-before" onclick="setDIView(false,this)">Before processing</button>
+        <button class="toggle-btn" id="di-tog-after" onclick="setDIView(true,this)" disabled>After processing</button>
+      </div>
+      <div id="dataInfoResult" class="result-area">
+        <p class="placeholder-text">Select an action from the sidebar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Processing Section -->
+<div id="sec-processing" class="section">
+  <div class="layout-side">
+    <div class="sidebar">
+      <div class="sidebar-title">Processing</div>
+
+      <div class="proc-group">
+        <label class="proc-radio-label">
+          <input type="radio" name="procType" value="num_nan" onchange="onProcType(this)"/>
+          Numerical NaN
+        </label>
+        <select id="selNumNan" class="sel-side" disabled>
+          <option value="">Imputer Types</option>
+          <option value="fill_num_mean">Mean</option>
+          <option value="fill_num_median">Median</option>
+          <option value="fill_num_mode">Mode</option>
+        </select>
+      </div>
+
+      <div class="proc-group">
+        <label class="proc-radio-label">
+          <input type="radio" name="procType" value="cat_nan" onchange="onProcType(this)"/>
+          Categorical NaN
+        </label>
+        <select id="selCatNan" class="sel-side" disabled>
+          <option value="">Imputer Types</option>
+          <option value="fill_cat_mode">Mode</option>
+          <option value="fill_cat_unknown">Unknown</option>
+        </select>
+      </div>
+
+      <div class="proc-group">
+        <label class="proc-radio-label">
+          <input type="radio" name="procType" value="encoding" onchange="onProcType(this)"/>
+          Encoding
+        </label>
+        <select id="selEncoding" class="sel-side" disabled>
+          <option value="">Encode Types</option>
+          <option value="encode_label">Label Encoding</option>
+          <option value="encode_onehot">One-Hot Encoding</option>
+        </select>
+      </div>
+
+      <div class="proc-group">
+        <label class="proc-radio-label">
+          <input type="radio" name="procType" value="normalize" onchange="onProcType(this)"/>
+          Normalize
+        </label>
+        <select id="selNormalize" class="sel-side" disabled>
+          <option value="">Normalize Type</option>
+          <option value="normalize_minmax">Min-Max</option>
+          <option value="normalize_standard">Standard Scaler</option>
+        </select>
+      </div>
+
+      <div class="proc-group">
+        <label class="proc-radio-label">
+          <input type="radio" name="procType" value="imbalance" onchange="onProcType(this)"/>
+          Handle Imbalance
+        </label>
+        <select id="selImbalance" class="sel-side" disabled>
+          <option value="">Imbalance Type</option>
+          <option value="handle_imbalance_oversample">Oversample</option>
+          <option value="handle_imbalance_undersample">Undersample</option>
+        </select>
+      </div>
+
+      <button class="btn-side-danger" id="btnRemoveDup" onclick="applyAction('remove_duplicates')" style="display:none">Remove Duplicates</button>
+
+      <div class="vector-section">
+        <div class="vec-title">⚡ VectorAssembler</div>
+        
+        <div style="margin-bottom:10px">
+          <small class="vec-hint" style="display:block;margin-bottom:5px">1️⃣ Select Target Column</small>
+          <div style="display:flex;gap:6px">
+            <select id="vecTargetSelect" class="sel-side" style="flex:1" onchange="onTargetSelect()">
+              <option value="">-- Select Target --</option>
+            </select>
+            <button class="btn-side-action" onclick="setTargetColumn()" style="min-width:60px;padding:7px;font-size:11px">Set</button>
+          </div>
+          <div id="targetStatus" style="font-size:11px;margin-top:4px;color:#92400e"></div>
+        </div>
+
+        <div>
+          <small class="vec-hint" style="display:block;margin-bottom:5px">2️⃣ Select Feature Columns (hold Ctrl)</small>
+          <select id="vecFeatSelect" class="sel-side" multiple size="5"></select>
+        </div>
+
+        <button class="btn-vec" onclick="runVectorAssembler()">Run VectorAssembler</button>
+        <div id="vecStatus" class="vec-status" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="proc-header">
+        <button class="btn-apply-proc" onclick="applyProcessing()">Apply</button>
+        <span class="col-label">Column</span>
+        <select id="procColSelect" class="sel-col">
+          <option value="">-- All Relevant Columns --</option>
+        </select>
+      </div>
+      <div id="appliedSteps" class="applied-steps-bar" style="display:none"></div>
+      <div id="procResult" class="result-area">
+        <p class="placeholder-text">Select a processing type then click Apply</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visualization Section -->
+<div id="sec-visualization" class="section">
+  <div class="layout-side">
+    <div class="sidebar">
+      <div class="sidebar-title">Visualization</div>
+      <div class="side-group-label">Categorical</div>
+      <button class="btn-side" onclick="doChart('pie','cat',event)">Pie Chart</button>
+      <button class="btn-side" onclick="doChart('bar','cat',event)">Bar Chart</button>
+      <button class="btn-side" onclick="doChart('hbar','cat',event)">Horizontal Bar</button>
+      <button class="btn-side" onclick="doChart('count','cat',event)">Count Plot</button>
+      <div class="side-group-label">Numerical</div>
+      <button class="btn-side" onclick="doChart('hist','num',event)">Histogram</button>
+      <button class="btn-side" onclick="doChart('box','num',event)">Box Plot</button>
+      <button class="btn-side" onclick="doChart('heatmap','none',event)">Heatmap (All)</button>
+      <button class="btn-side" onclick="doChart('kde','num',event)">KDE Plot</button>
+      <button class="btn-side" onclick="doChart('scatter','num',event)">Scatter Plot</button>
+    </div>
+    <div class="main-content">
+      <div class="viz-header">
+        <button class="toggle-btn active-toggle" id="viz-tog-before" onclick="setVizView(false,this)">Before processing</button>
+        <button class="toggle-btn" id="viz-tog-after" onclick="setVizView(true,this)" disabled>After processing</button>
+        <button class="btn-apply-proc" onclick="applyViz()">Apply</button>
+        <span class="col-label" id="vizColLabel" style="display:none">Column</span>
+        <select id="vizCol1" class="sel-col" style="display:none"></select>
+        <select id="vizCol2" class="sel-col" style="display:none"></select>
+      </div>
+      <div id="vizResult" class="result-area">
+        <p class="placeholder-text">Select a chart type from the sidebar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ML Models Section -->
+<div id="sec-ml" class="section">
+  <div class="layout-side">
+    <div class="sidebar">
+      <div class="sidebar-title">ML Models</div>
+      <div class="vec-info-box">
+        <div id="vecInfoML">⚡ VectorAssembler required</div>
+      </div>
+      <button class="btn-apply-proc" style="margin-top:14px;width:100%;padding:11px" onclick="trainModel()">Train & Evaluate</button>
+      <div id="mlDataSource" class="data-source-badge" style="display:none"></div>
+    </div>
+
+    <div class="main-content">
+      <div class="ml-tabs">
+        <button class="ml-tab active-mltab" id="ml-tab-lr" onclick="selectML('lr',this)">
+          LR<br><small>Logistic Reg</small></button>
+        <button class="ml-tab" id="ml-tab-rf" onclick="selectML('rf',this)">
+          RF<br><small>Random Forest</small></button>
+        <button class="ml-tab" id="ml-tab-svm" onclick="selectML('svm',this)">
+          SVM<br><small>LinearSVC</small></button>
+        <button class="ml-tab" id="ml-tab-xgb" onclick="selectML('xgb',this)">
+          XGB<br><small>XGBoost</small></button>
+      </div>
+
+      <div class="ml-panels">
+        <div class="ml-panel" id="mlFeaturesDisplay">
+          <p class="placeholder-text">Features and Target will appear here</p>
+        </div>
+        <div class="ml-panel" id="mlResultDisplay">
+          <p class="placeholder-text">Model evaluation results will appear here</p>
+        </div>
+      </div>
+
+      <div class="scores-history-section">
+        <div class="scores-history-header">
+          📊 Scores History
+          <button class="btn-refresh-scores" onclick="loadScoresHistory()">↻ Refresh</button>
+        </div>
+        <div id="scoresHistory" class="scores-history-body">
+          <p class="placeholder-text" style="margin-top:20px">No scores saved yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span id="modalTitle">Select Column</span>
+      <button onclick="closeModal()" class="modal-close">✕</button>
+    </div>
+    <select id="modalColSelect" class="sel-col" style="width:100%;margin-bottom:12px"></select>
+    <button class="btn-apply-proc" style="width:100%" onclick="confirmModal()">Apply</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="/static/js/main.js"></script>
+
+<script>
+  fetch('/api/columns').then(r=>r.json()).then(d=>{
+    if(d.hero_image){
+      document.getElementById('heroSvg').style.display='none';
+      const img = document.getElementById('heroStaticImg');
+      img.src = d.hero_image; img.style.display='block';
+    }
+  }).catch(()=>{});
+</script>
+</body>
+</html>
